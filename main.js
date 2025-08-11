@@ -93,12 +93,27 @@ function logout() {
 // Initialize the application
 async function initializeApp() {
     try {
+        console.log('Initializing application...');
+        
+        // Initialize map first
         initializeMap();
+        
+        // Wait a moment for map to be ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         setupEventListeners();
         
         // Load initial data from Supabase
+        console.log('Fetching initial data from Supabase...');
         const initialData = await fetchLocations();
-        renderMarkers(initialData);
+        console.log('Initial data received:', initialData);
+        
+        if (initialData && initialData.length > 0) {
+            renderMarkers(initialData);
+        } else {
+            console.warn('No initial data received from Supabase');
+            showError('No firm locations found. Please check your Supabase table.');
+        }
         
         // Subscribe to realtime changes
         subscribeRealtime();
@@ -112,16 +127,55 @@ async function initializeApp() {
 // Fetch firm locations from Supabase
 async function fetchLocations() {
     try {
-        const { data, error } = await supabase
-            .from('firm_locations')
-            .select('firm, latitude, longitude');
+        console.log('fetchLocations: Starting Supabase query...');
+        console.log('Supabase client:', supabase);
+        
+        // Try multiple possible table names
+        let data, error;
+        
+        // First try firm_locations
+        const result1 = await supabase.from('firm_locations').select('firm, latitude, longitude');
+        if (result1.data && result1.data.length > 0) {
+            data = result1.data;
+            error = result1.error;
+            console.log('Found data in firm_locations table');
+        } else {
+            // Try firms table
+            const result2 = await supabase.from('firms').select('firm, latitude, longitude');
+            if (result2.data && result2.data.length > 0) {
+                data = result2.data;
+                error = result2.error;
+                console.log('Found data in firms table');
+            } else {
+                // Try with different field names
+                const result3 = await supabase.from('firms').select('firm_name, latitude, longitude');
+                if (result3.data && result3.data.length > 0) {
+                    data = result3.data.map(row => ({
+                        firm: row.firm_name,
+                        latitude: row.latitude,
+                        longitude: row.longitude
+                    }));
+                    error = result3.error;
+                    console.log('Found data in firms table with firm_name field');
+                } else {
+                    data = [];
+                    error = null;
+                    console.log('No data found in any table');
+                }
+            }
+        }
+        
+        console.log('Supabase response:', { data, error });
         
         if (error) {
+            console.error('Supabase error:', error);
             throw error;
         }
         
         if (data && data.length > 0) {
             console.log('Raw Supabase data:', data);
+            console.log('Data length:', data.length);
+            console.log('First row:', data[0]);
             return data;
         } else {
             console.log('No data found in firm_locations table');
@@ -136,6 +190,14 @@ async function fetchLocations() {
 
 // Render markers from Supabase data
 function renderMarkers(rows) {
+    console.log('renderMarkers called with:', rows);
+    console.log('Map object:', map);
+    
+    if (!map) {
+        console.error('Map is not initialized!');
+        return;
+    }
+    
     // Clear existing markers
     Object.values(markersByFirm).forEach(layer => {
         if (map.hasLayer(layer)) {
@@ -147,17 +209,25 @@ function renderMarkers(rows) {
     // Initialize layer groups for each allowed firm
     CONSULTING_CATEGORIES.forEach(firm => {
         markersByFirm[firm] = L.layerGroup();
+        console.log(`Created layer group for ${firm}`);
     });
     
     let validRows = 0;
     
-    rows.forEach(row => {
+    rows.forEach((row, index) => {
+        console.log(`Processing row ${index}:`, row);
+        
         const lat = Number(row.latitude);
         const lng = Number(row.longitude);
         const firm = row.firm;
         
+        console.log(`Row ${index} - lat: ${lat}, lng: ${lng}, firm: ${firm}`);
+        console.log(`Is lat finite: ${isFinite(lat)}, Is lng finite: ${isFinite(lng)}, Is firm allowed: ${CONSULTING_CATEGORIES.includes(firm)}`);
+        
         // Check if lat/lng are valid and firm is allowed
         if (isFinite(lat) && isFinite(lng) && CONSULTING_CATEGORIES.includes(firm)) {
+            console.log(`Creating marker for ${firm} at [${lat}, ${lng}]`);
+            
             // Create marker
             const icon = createCategoryIcon(firm);
             const marker = L.marker([lat, lng], { icon })
@@ -168,17 +238,24 @@ function renderMarkers(rows) {
             if (markersByFirm[firm]) {
                 markersByFirm[firm].addLayer(marker);
                 validRows++;
+                console.log(`Added marker to ${firm} layer. Total markers in ${firm}: ${markersByFirm[firm].getLayers().length}`);
+            } else {
+                console.error(`No layer group found for ${firm}`);
             }
         } else {
-            console.warn('Skipping invalid row:', row);
+            console.warn(`Skipping invalid row ${index}:`, row);
+            console.warn(`lat: ${lat} (finite: ${isFinite(lat)}), lng: ${lng} (finite: ${isFinite(lng)}), firm: ${firm} (allowed: ${CONSULTING_CATEGORIES.includes(firm)})`);
         }
     });
     
     console.log(`Rendered ${validRows} valid markers from ${rows.length} rows`);
+    console.log('Final markersByFirm:', markersByFirm);
     
     // Add all layer groups to map initially
-    Object.values(markersByFirm).forEach(layer => {
+    Object.values(markersByFirm).forEach((layer, index) => {
+        console.log(`Adding layer ${index} to map:`, layer);
         map.addLayer(layer);
+        console.log(`Layer ${index} added to map. Map has ${map.getLayers().length} layers`);
     });
     
     // Update counts and refresh UI
@@ -478,6 +555,26 @@ function setupEventListeners() {
             refreshDataBtn.textContent = 'Refresh Data';
             refreshDataBtn.disabled = false;
         });
+    }
+    
+    // Test data loading
+    const testDataBtn = document.createElement('button');
+    testDataBtn.textContent = 'Test Data Load';
+    testDataBtn.className = 'action-btn';
+    testDataBtn.style.marginTop = '10px';
+    testDataBtn.addEventListener('click', async () => {
+        console.log('=== TESTING DATA LOAD ===');
+        const testData = await fetchLocations();
+        console.log('Test data result:', testData);
+        if (testData && testData.length > 0) {
+            renderMarkers(testData);
+        }
+    });
+    
+    // Add test button to the UI
+    const layerActions = document.querySelector('.layer-actions');
+    if (layerActions) {
+        layerActions.appendChild(testDataBtn);
     }
     
     // Map controls
