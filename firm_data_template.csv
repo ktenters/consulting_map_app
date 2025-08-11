@@ -1,5 +1,7 @@
-id,firm_name,latitude,longitude
-1,Example Bain Office,40.7128,-74.0060
+id,firm,latitude,longitude
+1,Bain,40.7128,-74.0060
+2,BCG,41.8781,-87.6298
+3,McKinsey,42.3601,-71.0589
 
 
 
