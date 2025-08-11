@@ -56,3 +56,4 @@ console.log('   2. Import your firm data to Supabase');
 console.log('   3. Run: npm run dev');
 console.log('   4. Test the website with password: CAImap2025');
 
+

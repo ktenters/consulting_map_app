@@ -1,0 +1,10 @@
+.gitignore
+DATA_IMPORT_GUIDE.md
+NETLIFY_DEPLOYMENT.md
+README.md
+config.js
+firm_data_template.csv
+main.js
+netlify.toml
+setup.js
+vite.config.js
