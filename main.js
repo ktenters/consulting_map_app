@@ -1,6 +1,12 @@
-import L from 'leaflet';
+// Import Leaflet from CDN (loaded in HTML)
+// import L from 'leaflet';
 import { createClient } from '@supabase/supabase-js';
 import { config } from './config.js';
+
+// Check if Leaflet is available
+if (typeof L === 'undefined') {
+    console.error('Leaflet is not loaded. Please check the CDN link in index.html');
+}
 
 // Initialize Supabase client
 const supabase = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
