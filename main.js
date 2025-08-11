@@ -1,6 +1,7 @@
 // Import Leaflet from CDN (loaded in HTML)
 // import L from 'leaflet';
 import { createClient } from '@supabase/supabase-js';
+import './styles.css';
 
 
 // Check if Leaflet is available
