@@ -128,9 +128,9 @@ async function loadFirmData() {
             
             // Transform Supabase data to match our expected format
             currentFirmData = data.map(firm => {
-                const firmName = firm.Firm;
-                const firmLat = parseFloat(firm.Latitude || 0);
-                const firmLng = parseFloat(firm.Longitude || 0);
+                const firmName = firm.firm_name || firm.Firm;
+                const firmLat = parseFloat(firm.latitude || firm.Latitude || 0);
+                const firmLng = parseFloat(firm.longitude || firm.Longitude || 0);
                 
                 // Map firm to predefined category based on firm name
                 let category = 'Other';
@@ -142,18 +142,10 @@ async function loadFirmData() {
                 }
                 
                 return {
-                    id: firm.ID || firm.id || Math.random().toString(36).substr(2, 9),
+                    id: firm.id || Math.random().toString(36).substr(2, 9),
                     name: firmName,
                     category: category,
-                    location: 'Location not specified',
-                    coordinates: [firmLat, firmLng],
-                    description: 'Consulting firm',
-                    website: '',
-                    employees: '',
-                    founded: '',
-                    address: '',
-                    phone: '',
-                    email: ''
+                    coordinates: [firmLat, firmLng]
                 };
             }).filter(firm => 
                 firm.coordinates[0] !== 0 && 
@@ -177,81 +169,20 @@ async function loadFirmData() {
             layers[category] = L.layerGroup();
         });
         
-        // Also create layer for 'Other' category if we have firms that don't match
-        if (currentFirmData.some(firm => firm.category === 'Other')) {
-            layers['Other'] = L.layerGroup();
-        }
-        
         console.log('Created layers for categories:', Object.keys(layers));
         
     } catch (error) {
         console.warn('Using sample data due to:', error.message);
         
-        // Sample data structure for demonstration
-        currentFirmData = [
-            {
-                id: 1,
-                name: 'Tech Solutions Inc.',
-                category: 'Tech Solutions Inc.',
-                location: 'New York, NY',
-                coordinates: [40.7128, -74.0060],
-                description: 'Leading software development company specializing in enterprise solutions.',
-                website: 'https://techsolutions.com',
-                employees: '500-1000',
-                founded: '2010'
-            },
-            {
-                id: 2,
-                name: 'Global Manufacturing Co.',
-                category: 'Global Manufacturing Co.',
-                location: 'Chicago, IL',
-                coordinates: [41.8781, -87.6298],
-                description: 'International manufacturing company with operations in 15 countries.',
-                website: 'https://globalmanufacturing.com',
-                employees: '1000-5000',
-                founded: '1985'
-            },
-            {
-                id: 3,
-                name: 'Healthcare Partners',
-                category: 'Healthcare Partners',
-                location: 'Los Angeles, CA',
-                coordinates: [34.0522, -118.2437],
-                description: 'Healthcare management and consulting services.',
-                website: 'https://healthcarepartners.com',
-                employees: '100-500',
-                founded: '2005'
-            },
-            {
-                id: 4,
-                name: 'Financial Services Group',
-                category: 'Financial Services Group',
-                location: 'Boston, MA',
-                coordinates: [42.3601, -71.0589],
-                description: 'Investment banking and financial advisory services.',
-                website: 'https://financialservices.com',
-                employees: '500-1000',
-                founded: '1995'
-            },
-            {
-                id: 5,
-                name: 'Energy Solutions',
-                category: 'Energy Solutions',
-                location: 'Houston, TX',
-                coordinates: [29.7604, -95.3698],
-                description: 'Renewable energy company focusing on solar and wind power.',
-                website: 'https://energysolutions.com',
-                employees: '100-500',
-                founded: '2012'
-            }
-        ];
+        // No sample data - only use Supabase data
+        currentFirmData = [];
         
-        // Create layers for all predefined categories for sample data
+        // Create layers for all predefined categories
         CONSULTING_CATEGORIES.forEach(category => {
             layers[category] = L.layerGroup();
         });
         
-        console.log('Created sample data layers for categories:', Object.keys(layers));
+        console.log('Created layers for predefined categories:', Object.keys(layers));
     }
 }
 
@@ -270,9 +201,9 @@ async function refreshFirmData() {
         if (data && data.length > 0) {
             // Transform the new data
             const newFirmData = data.map(firm => {
-                const firmName = firm.Firm;
-                const firmLat = parseFloat(firm.Latitude || 0);
-                const firmLng = parseFloat(firm.Longitude || 0);
+                const firmName = firm.firm_name || firm.Firm;
+                const firmLat = parseFloat(firm.latitude || firm.Latitude || 0);
+                const firmLng = parseFloat(firm.longitude || firm.Longitude || 0);
                 
                 // Map firm to predefined category based on firm name
                 let category = 'Other';
@@ -284,18 +215,10 @@ async function refreshFirmData() {
                 }
                 
                 return {
-                    id: firm.ID || firm.id || Math.random().toString(36).substr(2, 9),
+                    id: firm.id || Math.random().toString(36).substr(2, 9),
                     name: firmName,
                     category: category,
-                    location: 'Location not specified',
-                    coordinates: [firmLat, firmLng],
-                    description: 'Consulting firm',
-                    website: '',
-                    employees: '',
-                    founded: '',
-                    address: '',
-                    phone: '',
-                    email: ''
+                    coordinates: [firmLat, firmLng]
                 };
             }).filter(firm => 
                 firm.coordinates[0] !== 0 && 
@@ -424,12 +347,8 @@ function createPopupContent(firm) {
     return `
         <div class="firm-popup">
             <h3>${firm.name}</h3>
-            <p><strong>Firm:</strong> ${firm.name}</p>
-            <p><strong>Location:</strong> ${firm.location}</p>
-            <p><strong>Employees:</strong> ${firm.employees}</p>
-            <p><strong>Founded:</strong> ${firm.founded}</p>
-            <p>${firm.description}</p>
-            <a href="${firm.website}" target="_blank" class="website-link">Visit Website</a>
+            <p><strong>Category:</strong> ${firm.category}</p>
+            <p><strong>Coordinates:</strong> ${firm.coordinates[0].toFixed(4)}, ${firm.coordinates[1].toFixed(4)}</p>
         </div>
     `;
 }
@@ -438,13 +357,8 @@ function createPopupContent(firm) {
 function showFirmDetails(firm) {
     firmDetails.innerHTML = `
         <h4>${firm.name}</h4>
-        <p><strong>Firm:</strong> ${firm.name}</p>
-        <p><strong>Location:</strong> ${firm.location}</p>
-        <p><strong>Employees:</strong> ${firm.employees}</p>
-        <p><strong>Founded:</strong> ${firm.founded}</p>
-        <p><strong>Description:</strong></p>
-        <p>${firm.description}</p>
-        <a href="${firm.website}" target="_blank" class="website-link">Visit Website</a>
+        <p><strong>Category:</strong> ${firm.category}</p>
+        <p><strong>Coordinates:</strong> ${firm.coordinates[0].toFixed(4)}, ${firm.coordinates[1].toFixed(4)}</p>
     `;
 }
 
@@ -452,7 +366,8 @@ function showFirmDetails(firm) {
 function populateLayerControls() {
     layerCheckboxes.innerHTML = '';
     
-    Object.keys(layers).forEach(category => {
+    // Only show the 10 predefined consulting firm categories
+    CONSULTING_CATEGORIES.forEach(category => {
         const firmCount = currentFirmData.filter(firm => firm.category === category).length;
         
         const checkboxDiv = document.createElement('div');
