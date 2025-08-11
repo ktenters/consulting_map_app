@@ -54,6 +54,8 @@ body {
 .logo {
     max-width: 300px;
     height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 .password-container h1 {
@@ -144,8 +146,9 @@ body {
 }
 
 .header-logo {
-    height: 50px;
-    width: auto;
+    max-width: 200px;
+    height: auto;
+    display: block;
 }
 
 .header h1 {

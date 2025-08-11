@@ -380,12 +380,6 @@ function toggleFullscreen() {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Password submission
-    submitPassword.addEventListener('click', checkPassword);
-    passwordInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') checkPassword();
-    });
-    
     // Logout
     logoutBtn.addEventListener('click', logout);
     
@@ -414,6 +408,12 @@ function showError(message) {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Set up password event listeners immediately
+    submitPassword.addEventListener('click', checkPassword);
+    passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') checkPassword();
+    });
+    
     // Focus on password input
     passwordInput.focus();
     
