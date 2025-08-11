@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charles Aris - Interactive Firm Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Password Protection Screen -->
+    <div id="passwordScreen" class="password-screen">
+        <div class="password-container">
+            <div class="logo-container">
+                <img src="https://www.charlesaris.com/wp-content/uploads/2023/01/Charles-Aris-Logo-2023.png" alt="Charles Aris Logo" class="logo">
+            </div>
+            <h1>Interactive Firm Map</h1>
+            <p>Please enter the password to access the map</p>
+            <div class="password-input-container">
+                <input type="password" id="passwordInput" placeholder="Enter password" class="password-input">
+                <button id="submitPassword" class="submit-btn">Access Map</button>
+            </div>
+            <div id="passwordError" class="error-message"></div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="main-app hidden">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="https://www.charlesaris.com/wp-content/uploads/2023/01/Charles-Aris-Logo-2023.png" alt="Charles Aris Logo" class="header-logo">
+                    <h1>Interactive Firm Map</h1>
+                </div>
+                <div class="user-info">
+                    <span id="userInfo">Welcome</span>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h3>Map Layers</h3>
+                    <p>Select layers to display on the map</p>
+                </div>
+                
+                <div class="layer-controls">
+                    <div class="layer-group">
+                        <h4>Firm Categories</h4>
+                        <div class="layer-checkboxes" id="layerCheckboxes">
+                            <!-- Layer checkboxes will be populated dynamically -->
+                        </div>
+                    </div>
+                    
+                    <div class="layer-actions">
+                        <button id="selectAllLayers" class="action-btn">Select All</button>
+                        <button id="clearAllLayers" class="action-btn">Clear All</button>
+                    </div>
+                </div>
+
+                <div class="firm-info" id="firmInfo">
+                    <h4>Firm Information</h4>
+                    <div id="firmDetails" class="firm-details">
+                        <p>Click on a map marker to view firm details</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Map Container -->
+            <div class="map-container">
+                <div id="map" class="map"></div>
+                <div class="map-controls">
+                    <button id="resetView" class="map-btn">Reset View</button>
+                    <button id="fullscreen" class="map-btn">Fullscreen</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,23 @@
+{
+  "name": "cai-interactive-map",
+  "version": "1.0.0",
+  "description": "Interactive map for consulting firm locations",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "setup": "node setup.js"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "@supabase/supabase-js": "^2.38.4",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "keywords": ["map", "leaflet", "supabase", "charles-aris"],
+  "author": "Charles Aris",
+  "license": "MIT"
+}

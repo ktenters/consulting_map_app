@@ -1,0 +1,411 @@
+/* Charles Aris Brand Colors */
+:root {
+    --cai-primary: #1f4e79;      /* Dark Blue */
+    --cai-secondary: #0073aa;     /* Medium Blue */
+    --cai-accent: #00a0dc;        /* Light Blue */
+    --cai-gold: #d4af37;          /* Gold */
+    --cai-light-gray: #f5f5f5;    /* Light Gray */
+    --cai-dark-gray: #333333;     /* Dark Gray */
+    --cai-white: #ffffff;         /* White */
+    --cai-shadow: rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--cai-light-gray);
+    color: var(--cai-dark-gray);
+    overflow: hidden;
+}
+
+/* Password Screen */
+.password-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--cai-primary) 0%, var(--cai-secondary) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.password-container {
+    background: var(--cai-white);
+    padding: 3rem;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px var(--cai-shadow);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+}
+
+.logo-container {
+    margin-bottom: 2rem;
+}
+
+.logo {
+    max-width: 300px;
+    height: auto;
+}
+
+.password-container h1 {
+    color: var(--cai-primary);
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.password-container p {
+    color: var(--cai-dark-gray);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.password-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.password-input {
+    padding: 1rem;
+    border: 2px solid var(--cai-light-gray);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    transition: border-color 0.3s ease;
+}
+
+.password-input:focus {
+    outline: none;
+    border-color: var(--cai-accent);
+}
+
+.submit-btn {
+    background: var(--cai-primary);
+    color: var(--cai-white);
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+    background: var(--cai-secondary);
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.9rem;
+    min-height: 1.2rem;
+}
+
+/* Main Application */
+.main-app {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-app.hidden {
+    display: none;
+}
+
+/* Header */
+.header {
+    background: var(--cai-white);
+    box-shadow: 0 2px 10px var(--cai-shadow);
+    padding: 1rem 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-logo {
+    height: 50px;
+    width: auto;
+}
+
+.header h1 {
+    color: var(--cai-primary);
+    font-size: 1.5rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logout-btn {
+    background: var(--cai-secondary);
+    color: var(--cai-white);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.logout-btn:hover {
+    background: var(--cai-primary);
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 350px;
+    background: var(--cai-white);
+    border-right: 1px solid var(--cai-light-gray);
+    padding: 2rem;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px var(--cai-shadow);
+}
+
+.sidebar-header h3 {
+    color: var(--cai-primary);
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.sidebar-header p {
+    color: var(--cai-dark-gray);
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+}
+
+.layer-group h4 {
+    color: var(--cai-secondary);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.layer-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+}
+
+.layer-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem;
+    background: var(--cai-light-gray);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.layer-checkbox:hover {
+    background: #e8e8e8;
+}
+
+.layer-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--cai-accent);
+}
+
+.layer-checkbox label {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--cai-dark-gray);
+}
+
+.layer-count {
+    background: var(--cai-accent);
+    color: var(--cai-white);
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.layer-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.action-btn {
+    flex: 1;
+    background: var(--cai-light-gray);
+    color: var(--cai-dark-gray);
+    border: 1px solid var(--cai-light-gray);
+    padding: 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    background: var(--cai-accent);
+    color: var(--cai-white);
+    border-color: var(--cai-accent);
+}
+
+.firm-info h4 {
+    color: var(--cai-secondary);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.firm-details {
+    background: var(--cai-light-gray);
+    padding: 1rem;
+    border-radius: 8px;
+    min-height: 100px;
+}
+
+.firm-details p {
+    color: var(--cai-dark-gray);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Map Container */
+.map-container {
+    flex: 1;
+    position: relative;
+    background: var(--cai-light-gray);
+}
+
+.map {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+}
+
+.map-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.map-btn {
+    background: var(--cai-white);
+    color: var(--cai-primary);
+    border: 1px solid var(--cai-light-gray);
+    padding: 0.8rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px var(--cai-shadow);
+}
+
+.map-btn:hover {
+    background: var(--cai-primary);
+    color: var(--cai-white);
+    border-color: var(--cai-primary);
+}
+
+/* Leaflet Customizations */
+.leaflet-popup-content-wrapper {
+    background: var(--cai-white);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px var(--cai-shadow);
+}
+
+.leaflet-popup-content {
+    margin: 1rem;
+    font-family: inherit;
+}
+
+.leaflet-popup-tip {
+    background: var(--cai-white);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .sidebar {
+        width: 300px;
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 300px;
+        border-right: none;
+        border-bottom: 1px solid var(--cai-light-gray);
+    }
+    
+    .header-content {
+        padding: 0 1rem;
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .logo-section {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .header h1 {
+        font-size: 1.2rem;
+    }
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
