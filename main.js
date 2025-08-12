@@ -199,6 +199,18 @@ function renderMarkers(rows) {
     // Store data for UI updates
     firmData = rows;
     
+    // Fit map to show all markers with zoom limits
+    if (Object.keys(firmLayers).length > 0) {
+        const allMarkers = Object.values(firmLayers).flatMap(layer => layer.getLayers());
+        if (allMarkers.length > 0) {
+            const group = L.featureGroup(allMarkers);
+            map.fitBounds(group.getBounds(), {
+                padding: [50, 50],
+                maxZoom: 6  // don't zoom past 6 when auto-fitting
+            });
+        }
+    }
+    
     // Update UI
     updateLayerControls();
     console.log('Markers rendered successfully');
@@ -279,6 +291,20 @@ async function handleRealtimeChange(payload) {
     }
 }
 
+// Fit map bounds to show all visible markers
+function fitMapToMarkers() {
+    if (Object.keys(firmLayers).length > 0) {
+        const allMarkers = Object.values(firmLayers).flatMap(layer => layer.getLayers());
+        if (allMarkers.length > 0) {
+            const group = L.featureGroup(allMarkers);
+            map.fitBounds(group.getBounds(), {
+                padding: [50, 50],
+                maxZoom: 6  // don't zoom past 6 when auto-fitting
+            });
+        }
+    }
+}
+
 // Refresh firm data from Supabase
 async function refreshFirmData() {
     try {
@@ -294,13 +320,25 @@ async function refreshFirmData() {
 
 // Initialize Leaflet map
 function initializeMap() {
-           // Create map centered on US
-           map = L.map('map', {
-               center: [39.8283, -98.5795], // Center of US
-               zoom: 4,
-               zoomControl: true,
-               attributionControl: true
-           });
+    // Create map centered on US with smooth zoom controls
+    map = L.map('map', {
+        center: [39.5, -98.35],   // continental US center
+        zoom: 4,                  // starting zoom
+        minZoom: 3,
+        maxZoom: 12,
+        
+        // smoother interactions:
+        zoomSnap: 0.5,            // allow half zoom levels
+        zoomDelta: 0.5,           // +/- buttons & double-click change by 0.5
+        wheelDebounceTime: 80,    // slow down fast trackpads a bit
+        wheelPxPerZoomLevel: 100, // more scroll pixels per zoom level = gentler
+        scrollWheelZoom: true,
+        zoomAnimation: true,
+        markerZoomAnimation: true,
+        
+        zoomControl: true,
+        attributionControl: true
+    });
 
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -394,7 +432,7 @@ function clearAllLayers() {
 
 // Reset map view
 function resetMapView() {
-    map.setView([39.8283, -98.5795], 4); // Center of US
+    map.setView([39.5, -98.35], 4, { maxZoom: 6 }); // Center of US with zoom limit
 }
 
 // Toggle fullscreen
