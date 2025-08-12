@@ -15,38 +15,20 @@ const supabase = createClient(
     import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobXhpcXB6dHNmZml2eW96b2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NjcxMTgsImV4cCI6MjA3MDQ0MzExOH0.nCiTghwzWH6LHgqMju_4zUV9B7k97TLvGqdUPAg2vYc'
 );
 
-// Predefined consulting firm categories
-const CONSULTING_CATEGORIES = [
-    'Bain',
-    'BCG', 
-    'McKinsey',
-    'Strategy&',
-    'PwC',
-    'LEK',
-    'Oliver Wyman',
-    'EY-Parthenon',
-    'Deloitte',
-    'Kearney'
-];
+// Dynamic firm management - no hardcoded categories
+let firmLayers = {}; // Leaflet layer groups for each firm
+let firmColors = {}; // Stable colors for each firm
+let firmData = []; // Current data from Supabase
 
-// Category color mapping for consistent visual identity
-const CATEGORY_COLORS = {
-    'Bain': '#1f4e79',
-    'BCG': '#00a0dc', 
-    'McKinsey': '#1f4e79',
-    'Strategy&': '#dc3545',
-    'PwC': '#ffc107',
-    'LEK': '#28a745',
-    'Oliver Wyman': '#6f42c1',
-    'EY-Parthenon': '#fd7e14',
-    'Deloitte': '#0073aa',
-    'Kearney': '#e83e8c'
-};
+// Color palette for firms
+const COLOR_PALETTE = [
+    '#1f4e79', '#00a0dc', '#dc3545', '#ffc107', '#28a745',
+    '#6f42c1', '#fd7e14', '#0073aa', '#e83e8c', '#20c997',
+    '#17a2b8', '#6c757d', '#343a40', '#495057', '#6f42c1'
+];
 
 // Global variables
 let map;
-let markersByFirm = {}; // Layer groups for each firm
-let currentFirmData = []; // Current data from Supabase
 let realtimeSubscription = null; // Supabase realtime subscription
 
 // DOM elements
@@ -127,45 +109,11 @@ async function initializeApp() {
 // Fetch firm locations from Supabase
 async function fetchLocations() {
     try {
-        console.log('fetchLocations: Starting Supabase query...');
-        console.log('Supabase client:', supabase);
+        console.log('Fetching firm locations from public.firm_locations...');
         
-        // Try multiple possible table names
-        let data, error;
-        
-        // First try firm_locations
-        const result1 = await supabase.from('firm_locations').select('firm, latitude, longitude');
-        if (result1.data && result1.data.length > 0) {
-            data = result1.data;
-            error = result1.error;
-            console.log('Found data in firm_locations table');
-        } else {
-            // Try firms table
-            const result2 = await supabase.from('firms').select('firm, latitude, longitude');
-            if (result2.data && result2.data.length > 0) {
-                data = result2.data;
-                error = result2.error;
-                console.log('Found data in firms table');
-            } else {
-                // Try with different field names
-                const result3 = await supabase.from('firms').select('firm_name, latitude, longitude');
-                if (result3.data && result3.data.length > 0) {
-                    data = result3.data.map(row => ({
-                        firm: row.firm_name,
-                        latitude: row.latitude,
-                        longitude: row.longitude
-                    }));
-                    error = result3.error;
-                    console.log('Found data in firms table with firm_name field');
-                } else {
-                    data = [];
-                    error = null;
-                    console.log('No data found in any table');
-                }
-            }
-        }
-        
-        console.log('Supabase response:', { data, error });
+        const { data, error } = await supabase
+            .from('firm_locations')
+            .select('Firm, Latitude, Longitude');
         
         if (error) {
             console.error('Supabase error:', error);
@@ -173,9 +121,7 @@ async function fetchLocations() {
         }
         
         if (data && data.length > 0) {
-            console.log('Raw Supabase data:', data);
-            console.log('Data length:', data.length);
-            console.log('First row:', data[0]);
+            console.log(`Found ${data.length} firm locations:`, data);
             return data;
         } else {
             console.log('No data found in firm_locations table');
@@ -183,95 +129,109 @@ async function fetchLocations() {
         }
     } catch (error) {
         console.error('Failed to fetch firm locations:', error);
-        showError('Couldn\'t load firm locations. Retry.');
+        showError('Couldn\'t load firm locations. Please check your Supabase table.');
         return [];
     }
 }
 
 // Render markers from Supabase data
 function renderMarkers(rows) {
-    console.log('renderMarkers called with:', rows);
-    console.log('Map object:', map);
-    
     if (!map) {
         console.error('Map is not initialized!');
         return;
     }
     
-    // Clear existing markers
-    Object.values(markersByFirm).forEach(layer => {
+    console.log(`Rendering ${rows.length} firm locations...`);
+    
+    // Clear existing layers and data
+    Object.values(firmLayers).forEach(layer => {
         if (map.hasLayer(layer)) {
             map.removeLayer(layer);
         }
     });
-    markersByFirm = {};
+    firmLayers = {};
+    firmColors = {};
+    firmData = [];
     
-    // Initialize layer groups for each allowed firm
-    CONSULTING_CATEGORIES.forEach(firm => {
-        markersByFirm[firm] = L.layerGroup();
-        console.log(`Created layer group for ${firm}`);
-    });
-    
-    let validRows = 0;
-    
-    rows.forEach((row, index) => {
-        console.log(`Processing row ${index}:`, row);
+    // Group rows by firm
+    const firmsByGroup = {};
+    rows.forEach(row => {
+        const lat = Number(row.Latitude);
+        const lng = Number(row.Longitude);
+        const firm = row.Firm;
         
-        const lat = Number(row.latitude);
-        const lng = Number(row.longitude);
-        const firm = row.firm;
-        
-        console.log(`Row ${index} - lat: ${lat}, lng: ${lng}, firm: ${firm}`);
-        console.log(`Is lat finite: ${isFinite(lat)}, Is lng finite: ${isFinite(lng)}, Is firm allowed: ${CONSULTING_CATEGORIES.includes(firm)}`);
-        
-        // Check if lat/lng are valid and firm is allowed
-        if (isFinite(lat) && isFinite(lng) && CONSULTING_CATEGORIES.includes(firm)) {
-            console.log(`Creating marker for ${firm} at [${lat}, ${lng}]`);
-            
-            // Create marker
-            const icon = createCategoryIcon(firm);
-            const marker = L.marker([lat, lng], { icon })
-                .bindPopup(createPopupContent({ name: firm, category: firm, coordinates: [lat, lng] }))
-                .on('click', () => showFirmDetails({ name: firm, category: firm, coordinates: [lat, lng] }));
-            
-            // Add to appropriate layer group
-            if (markersByFirm[firm]) {
-                markersByFirm[firm].addLayer(marker);
-                validRows++;
-                console.log(`Added marker to ${firm} layer. Total markers in ${firm}: ${markersByFirm[firm].getLayers().length}`);
-            } else {
-                console.error(`No layer group found for ${firm}`);
+        if (isFinite(lat) && isFinite(lng) && firm) {
+            if (!firmsByGroup[firm]) {
+                firmsByGroup[firm] = [];
             }
+            firmsByGroup[firm].push({ lat, lng, firm });
         } else {
-            console.warn(`Skipping invalid row ${index}:`, row);
-            console.warn(`lat: ${lat} (finite: ${isFinite(lat)}), lng: ${lng} (finite: ${isFinite(lng)}), firm: ${firm} (allowed: ${CONSULTING_CATEGORIES.includes(firm)})`);
+            console.warn('Skipping invalid row:', row);
         }
     });
     
-    console.log(`Rendered ${validRows} valid markers from ${rows.length} rows`);
-    console.log('Final markersByFirm:', markersByFirm);
+    console.log('Firms found:', Object.keys(firmsByGroup));
     
-    // Add all layer groups to map initially
-    Object.values(markersByFirm).forEach((layer, index) => {
-        console.log(`Adding layer ${index} to map:`, layer);
-        map.addLayer(layer);
-        console.log(`Layer ${index} added to map. Map has ${map.getLayers().length} layers`);
+    // Create layer for each firm
+    Object.keys(firmsByGroup).forEach((firm, index) => {
+        // Assign stable color
+        firmColors[firm] = COLOR_PALETTE[index % COLOR_PALETTE.length];
+        
+        // Create layer group
+        firmLayers[firm] = L.layerGroup();
+        
+        // Add markers to layer
+        firmsByGroup[firm].forEach(location => {
+            const icon = createFirmIcon(firm);
+            const marker = L.marker([location.lat, location.lng], { icon })
+                .bindPopup(createPopupContent(location))
+                .on('click', () => showFirmDetails(location));
+            
+            firmLayers[firm].addLayer(marker);
+        });
+        
+        // Add layer to map
+        map.addLayer(firmLayers[firm]);
+        
+        console.log(`Created layer for ${firm} with ${firmsByGroup[firm].length} markers`);
     });
     
-    // Update counts and refresh UI
-    updateCounts();
-    populateLayerControls();
+    // Store data for UI updates
+    firmData = rows;
+    
+    // Update UI
+    updateLayerControls();
+    console.log('Markers rendered successfully');
 }
 
-// Update count pills for each firm
-function updateCounts() {
-    CONSULTING_CATEGORIES.forEach(firm => {
-        const count = markersByFirm[firm] ? markersByFirm[firm].getLayers().length : 0;
-        const countElement = document.querySelector(`#layer-${firm.replace(/[^a-zA-Z0-9]/g, '')} + label + .layer-count`);
-        if (countElement) {
-            countElement.textContent = count;
-        }
+// Update layer controls based on current firms
+function updateLayerControls() {
+    const layerCheckboxes = document.getElementById('layerCheckboxes');
+    if (!layerCheckboxes) return;
+    
+    layerCheckboxes.innerHTML = '';
+    
+    Object.keys(firmLayers).forEach(firm => {
+        const markerCount = firmLayers[firm].getLayers().length;
+        const firmId = firm.replace(/[^a-zA-Z0-9]/g, '');
+        
+        const checkboxDiv = document.createElement('div');
+        checkboxDiv.className = 'layer-checkbox';
+        checkboxDiv.innerHTML = `
+            <input type="checkbox" id="layer-${firmId}" checked>
+            <label for="layer-${firmId}">${firm}</label>
+            <span class="layer-count">${markerCount}</span>
+        `;
+        
+        const checkbox = checkboxDiv.querySelector('input');
+        checkbox.addEventListener('change', (e) => {
+            toggleFirmLayer(firm, e.target.checked);
+        });
+        
+        layerCheckboxes.appendChild(checkboxDiv);
     });
+    
+    console.log('Layer controls updated for firms:', Object.keys(firmLayers));
 }
 
 // Subscribe to Supabase realtime changes
@@ -322,81 +282,13 @@ async function handleRealtimeChange(payload) {
 // Refresh firm data from Supabase
 async function refreshFirmData() {
     try {
-        const { data, error } = await supabase
-            .from('firm_locations')
-            .select('firm, latitude, longitude');
-        
-        if (error) {
-            console.warn('Failed to refresh firm data:', error);
-            return;
-        }
-        
-        if (data && data.length > 0) {
-            // Transform the new data
-            const newFirmData = data.map(firm => {
-                const firmName = firm.firm_name || firm.Firm;
-                const firmLat = parseFloat(firm.latitude || firm.Latitude || 0);
-                const firmLng = parseFloat(firm.longitude || firm.Longitude || 0);
-                
-                // Map firm to predefined category based on firm name
-                let category = 'Other';
-                for (const cat of CONSULTING_CATEGORIES) {
-                    if (firmName && firmName.toLowerCase().includes(cat.toLowerCase())) {
-                        category = cat;
-                        break;
-                    }
-                }
-                
-                return {
-                    id: firm.id || Math.random().toString(36).substr(2, 9),
-                    name: firmName,
-                    category: category,
-                    coordinates: [firmLat, firmLng]
-                };
-            }).filter(firm => 
-                firm.coordinates[0] !== 0 && 
-                firm.coordinates[1] !== 0 && 
-                firm.name
-            );
-            
-            // Check if we have new firms
-            const currentFirmNames = new Set(currentFirmData.map(f => f.name));
-            const newFirms = newFirmData.filter(firm => !currentFirmNames.has(firm.name));
-            
-            if (newFirms.length > 0) {
-                console.log('Found new firms:', newFirms);
-                
-                // Add new firms to the map
-                newFirms.forEach(firm => {
-                    if (!layers[firm.category]) {
-                        layers[firm.category] = L.layerGroup();
-                        map.addLayer(layers[firm.category]);
-                    }
-                    
-                    const icon = createCategoryIcon(firm.category);
-                    const marker = L.marker(firm.coordinates, { icon })
-                        .bindPopup(createPopupContent(firm))
-                        .on('click', () => showFirmDetails(firm));
-                    
-                    layers[firm.category].addLayer(marker);
-                    
-                    if (!markers[firm.category]) {
-                        markers[firm.category] = [];
-                    }
-                    markers[firm.category].push(marker);
-                });
-                
-                // Update the current data
-                currentFirmData = newFirmData;
-                
-                // Refresh the layer controls
-                populateLayerControls();
-                
-                showError(`Added ${newFirms.length} new firm(s) to the map!`);
-            }
-        }
+        console.log('Refreshing firm data...');
+        const freshData = await fetchLocations();
+        renderMarkers(freshData);
+        showError('Firm data refreshed successfully!');
     } catch (error) {
         console.error('Error refreshing firm data:', error);
+        showError('Failed to refresh firm data. Please try again.');
     }
 }
 
@@ -415,19 +307,14 @@ function initializeMap() {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Add firms to map
-    addFirmsToMap();
+    // Map is ready for dynamic firm data
 }
 
-// This function is no longer needed - markers are now rendered by renderMarkers()
-function addFirmsToMap() {
-    console.log('addFirmsToMap is deprecated - use renderMarkers() instead');
-}
 
-// Create custom icon for different categories
-function createCategoryIcon(category) {
-    // Use predefined category colors for consistent visual identity
-    const color = CATEGORY_COLORS[category] || '#6c757d'; // Default gray for unknown categories
+
+// Create custom icon for firms
+function createFirmIcon(firm) {
+    const color = firmColors[firm] || '#6c757d';
     
     return L.divIcon({
         className: 'custom-marker',
@@ -445,81 +332,64 @@ function createCategoryIcon(category) {
 }
 
 // Create popup content for markers
-function createPopupContent(firm) {
+function createPopupContent(location) {
     return `
         <div class="firm-popup">
-            <h3>${firm.name}</h3>
-            <p><strong>Category:</strong> ${firm.category}</p>
-            <p><strong>Coordinates:</strong> ${firm.coordinates[0].toFixed(4)}, ${firm.coordinates[1].toFixed(4)}</p>
+            <h3>${location.firm}</h3>
+            <p><strong>Location:</strong> ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}</p>
         </div>
     `;
 }
 
 // Show firm details in sidebar
-function showFirmDetails(firm) {
+function showFirmDetails(location) {
     firmDetails.innerHTML = `
-        <h4>${firm.name}</h4>
-        <p><strong>Category:</strong> ${firm.category}</p>
-        <p><strong>Coordinates:</strong> ${firm.coordinates[0].toFixed(4)}, ${firm.coordinates[1].toFixed(4)}</p>
+        <h4>${location.firm}</h4>
+        <p><strong>Location:</strong> ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}</p>
     `;
 }
 
-// Populate layer controls
-function populateLayerControls() {
-    layerCheckboxes.innerHTML = '';
-    
-    // Only show the 10 predefined consulting firm categories
-    CONSULTING_CATEGORIES.forEach(category => {
-        const firmCount = currentFirmData.filter(firm => firm.category === category).length;
-        
-        const checkboxDiv = document.createElement('div');
-        checkboxDiv.className = 'layer-checkbox';
-        checkboxDiv.innerHTML = `
-            <input type="checkbox" id="layer-${category}" ${firmCount > 0 ? 'checked' : ''}>
-            <label for="layer-${category}">${category}</label>
-            <span class="layer-count">${firmCount}</span>
-        `;
-        
-        const checkbox = checkboxDiv.querySelector('input');
-        checkbox.addEventListener('change', (e) => {
-            toggleLayer(category, e.target.checked);
-        });
-        
-        layerCheckboxes.appendChild(checkboxDiv);
-    });
-}
 
-// Toggle layer visibility
-function toggleLayer(category, visible) {
-    if (visible) {
-        map.addLayer(markersByFirm[category]);
-    } else {
-        map.removeLayer(markersByFirm[category]);
+
+// Toggle firm layer visibility
+function toggleFirmLayer(firm, visible) {
+    if (firmLayers[firm]) {
+        if (visible) {
+            map.addLayer(firmLayers[firm]);
+            console.log(`Added ${firm} layer to map`);
+        } else {
+            map.removeLayer(firmLayers[firm]);
+            console.log(`Removed ${firm} layer from map`);
+        }
     }
 }
 
-// Select all layers
+// Select all firm layers
 function selectAllLayers() {
     const checkboxes = layerCheckboxes.querySelectorAll('input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
         checkbox.checked = true;
-        const category = checkbox.id.replace('layer-', '');
-        if (markersByFirm[category]) {
-            map.addLayer(markersByFirm[category]);
+        const firmId = checkbox.id.replace('layer-', '');
+        const firm = Object.keys(firmLayers).find(f => f.replace(/[^a-zA-Z0-9]/g, '') === firmId);
+        if (firm && firmLayers[firm]) {
+            map.addLayer(firmLayers[firm]);
         }
     });
+    console.log('All firm layers selected');
 }
 
-// Clear all layers
+// Clear all firm layers
 function clearAllLayers() {
     const checkboxes = layerCheckboxes.querySelectorAll('input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
         checkbox.checked = false;
-        const category = checkbox.id.replace('layer-', '');
-        if (markersByFirm[category]) {
-            map.removeLayer(markersByFirm[category]);
+        const firmId = checkbox.id.replace('layer-', '');
+        const firm = Object.keys(firmLayers).find(f => f.replace(/[^a-zA-Z0-9]/g, '') === firmId);
+        if (firm && firmLayers[firm]) {
+            map.removeLayer(firmLayers[firm]);
         }
     });
+    console.log('All firm layers cleared');
 }
 
 // Reset map view
