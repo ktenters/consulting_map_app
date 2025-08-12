@@ -1,5 +1,6 @@
 // LastUpdatedBadge Component
 // Displays last updated timestamp from Supabase with real-time updates
+// Now positioned in the left sidebar instead of map overlay
 
 function formatMonthDayYear(iso) {
     const d = new Date(iso);
@@ -20,9 +21,9 @@ class LastUpdatedBadge {
     }
 
     init() {
-        // Create badge element
+        // Create badge element with sidebar class
         this.element = document.createElement('div');
-        this.element.className = 'last-updated';
+        this.element.className = 'last-updated-sidebar';
         this.element.textContent = this.text;
         
         // Add to container
@@ -37,18 +38,35 @@ class LastUpdatedBadge {
 
     async loadLastUpdated() {
         try {
-            const { data, error } = await supabase
+            // Check if Supabase client is available
+            if (!window.supabase) {
+                console.error('Supabase client not available');
+                this.text = "Last updated — unavailable";
+                this.updateDisplay();
+                return;
+            }
+
+            const { data, error } = await window.supabase
                 .from("firm_locations_meta")
                 .select("last_updated")
-                .single();
+                .maybeSingle(); // Use maybeSingle() to avoid throwing when 0 rows
 
-            if (error || !data?.last_updated) {
+            if (error) {
+                console.error("last_updated error:", error);
                 this.text = "Last updated — unavailable";
-            } else {
-                this.text = `Last updated — ${formatMonthDayYear(data.last_updated)}`;
+                this.updateDisplay();
+                return;
             }
-            
+
+            if (!data?.last_updated) {
+                this.text = "Last updated — unavailable";
+                this.updateDisplay();
+                return;
+            }
+
+            this.text = `Last updated — ${formatMonthDayYear(data.last_updated)}`;
             this.updateDisplay();
+            
         } catch (error) {
             console.error('Error loading last updated:', error);
             this.text = "Last updated — error";
@@ -63,23 +81,33 @@ class LastUpdatedBadge {
     }
 
     subscribeToUpdates() {
-        // Subscribe to real-time changes on firm_locations
-        this.channel = supabase
-            .channel("firm_locations-updates")
-            .on(
-                "postgres_changes",
-                { event: "*", schema: "public", table: "firm_locations" },
-                () => {
-                    console.log('Firm locations updated, refreshing last updated badge');
-                    this.loadLastUpdated();
-                }
-            )
-            .subscribe();
+        try {
+            // Check if Supabase client is available
+            if (!window.supabase) {
+                console.error('Supabase client not available for real-time updates');
+                return;
+            }
+
+            // Subscribe to real-time changes on firm_locations
+            this.channel = window.supabase
+                .channel("firm_locations-updates")
+                .on(
+                    "postgres_changes",
+                    { event: "*", schema: "public", table: "firm_locations" },
+                    () => {
+                        console.log('Firm locations updated, refreshing last updated badge');
+                        this.loadLastUpdated();
+                    }
+                )
+                .subscribe();
+        } catch (error) {
+            console.error('Error setting up real-time subscription:', error);
+        }
     }
 
     destroy() {
-        if (this.channel) {
-            supabase.removeChannel(this.channel);
+        if (this.channel && window.supabase) {
+            window.supabase.removeChannel(this.channel);
         }
         if (this.element && this.element.parentNode) {
             this.element.parentNode.removeChild(this.element);

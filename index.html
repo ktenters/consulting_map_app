@@ -47,32 +47,37 @@
         <main class="main-content">
             <!-- Sidebar -->
             <aside class="sidebar">
-                <div class="sidebar-header">
-                    <h3>Map Layers</h3>
-                    <p>Select layers to display on the map</p>
-                </div>
-                
-                <div class="layer-controls">
-                    <div class="layer-group">
-                        <h4>Firms</h4>
-                        <div class="layer-checkboxes" id="layerCheckboxes">
-                            <!-- Firm checkboxes will be populated dynamically -->
-                        </div>
+                <div class="sidebar-content">
+                    <div class="sidebar-header">
+                        <h3>Map Layers</h3>
+                        <p>Select layers to display on the map</p>
                     </div>
                     
-                    <div class="layer-actions">
-                        <button id="selectAllLayers" class="action-btn">Select All</button>
-                        <button id="clearAllLayers" class="action-btn">Clear All</button>
-                        <button id="refreshData" class="action-btn">Refresh Data</button>
+                    <div class="layer-controls">
+                        <div class="layer-group">
+                            <h4>Firms</h4>
+                            <div class="layer-checkboxes" id="layerCheckboxes">
+                                <!-- Firm checkboxes will be populated dynamically -->
+                            </div>
+                        </div>
+                        
+                        <div class="layer-actions">
+                            <button id="selectAllLayers" class="action-btn">Select All</button>
+                            <button id="clearAllLayers" class="action-btn">Clear All</button>
+                            <button id="refreshData" class="action-btn">Refresh Data</button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="firm-info" id="firmInfo">
-                    <h4>Firm Information</h4>
-                    <div id="firmDetails" class="firm-details">
-                        <p>Click on a map marker to view firm details</p>
+                    <div class="firm-info" id="firmInfo">
+                        <h4>Firm Information</h4>
+                        <div id="firmDetails" class="firm-details">
+                            <p>Click on a map marker to view firm details</p>
+                        </div>
                     </div>
                 </div>
+                
+                <!-- Last updated badge will be inserted here by JavaScript -->
+                <div id="lastUpdatedContainer"></div>
             </aside>
 
             <!-- Map Container -->

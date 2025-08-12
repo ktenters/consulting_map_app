@@ -311,12 +311,12 @@ function fitMapToMarkers() {
 // Initialize last updated badge
 function initializeLastUpdatedBadge() {
     try {
-        const mapContainer = document.querySelector('.map-container');
-        if (mapContainer && window.LastUpdatedBadge) {
-            window.lastUpdatedBadge = new window.LastUpdatedBadge(mapContainer);
-            console.log('Last updated badge initialized');
+        const sidebarContainer = document.getElementById('lastUpdatedContainer');
+        if (sidebarContainer && window.LastUpdatedBadge) {
+            window.lastUpdatedBadge = new window.LastUpdatedBadge(sidebarContainer);
+            console.log('Last updated badge initialized in sidebar');
         } else {
-            console.warn('Could not initialize last updated badge - missing container or component');
+            console.warn('Could not initialize last updated badge - missing sidebar container or component');
         }
     } catch (error) {
         console.error('Error initializing last updated badge:', error);
