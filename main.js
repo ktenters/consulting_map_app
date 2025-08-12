@@ -427,25 +427,7 @@ function setupEventListeners() {
         });
     }
     
-    // Test data loading
-    const testDataBtn = document.createElement('button');
-    testDataBtn.textContent = 'Test Data Load';
-    testDataBtn.className = 'action-btn';
-    testDataBtn.style.marginTop = '10px';
-    testDataBtn.addEventListener('click', async () => {
-        console.log('=== TESTING DATA LOAD ===');
-        const testData = await fetchLocations();
-        console.log('Test data result:', testData);
-        if (testData && testData.length > 0) {
-            renderMarkers(testData);
-        }
-    });
-    
-    // Add test button to the UI
-    const layerActions = document.querySelector('.layer-actions');
-    if (layerActions) {
-        layerActions.appendChild(testDataBtn);
-    }
+
     
     // Map controls
     resetView.addEventListener('click', resetMapView);
@@ -486,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         .firm-popup h3 {
-            color: var(--cai-primary);
+            color: var(--accent-1);
             margin-bottom: 0.5rem;
         }
         
@@ -497,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         .website-link {
             display: inline-block;
-            background: var(--cai-accent);
+            background: var(--accent-2);
             color: white;
             padding: 0.5rem 1rem;
             text-decoration: none;
@@ -507,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         .website-link:hover {
-            background: var(--cai-secondary);
+            background: var(--accent-1);
         }
     `;
     document.head.appendChild(style);
