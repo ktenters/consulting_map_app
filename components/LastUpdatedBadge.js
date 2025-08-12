@@ -29,6 +29,21 @@ class LastUpdatedBadge {
         // Add to container
         this.container.appendChild(this.element);
         
+        // Wait for Supabase client to be available, then initialize
+        this.waitForSupabase();
+    }
+
+    waitForSupabase() {
+        // Check if Supabase client is available
+        if (window.supabase) {
+            this.initializeBadge();
+        } else {
+            // Wait a bit and try again
+            setTimeout(() => this.waitForSupabase(), 100);
+        }
+    }
+
+    initializeBadge() {
         // Load initial data
         this.loadLastUpdated();
         
@@ -38,14 +53,6 @@ class LastUpdatedBadge {
 
     async loadLastUpdated() {
         try {
-            // Check if Supabase client is available
-            if (!window.supabase) {
-                console.error('Supabase client not available');
-                this.text = "Last updated — unavailable";
-                this.updateDisplay();
-                return;
-            }
-
             const { data, error } = await window.supabase
                 .from("firm_locations_meta")
                 .select("last_updated")
@@ -82,12 +89,6 @@ class LastUpdatedBadge {
 
     subscribeToUpdates() {
         try {
-            // Check if Supabase client is available
-            if (!window.supabase) {
-                console.error('Supabase client not available for real-time updates');
-                return;
-            }
-
             // Subscribe to real-time changes on firm_locations
             this.channel = window.supabase
                 .channel("firm_locations-updates")
