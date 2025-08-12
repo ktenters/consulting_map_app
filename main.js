@@ -202,14 +202,14 @@ function renderMarkers(rows) {
     // Store data for UI updates
     firmData = rows;
     
-    // Fit map to show all markers with zoom limits
-    if (Object.keys(firmLayers).length > 0) {
+    // Fit map to show all markers with zoom limits (only if auto-fit is enabled)
+    if (AUTO_FIT_ON_LOAD && Object.keys(firmLayers).length > 0) {
         const allMarkers = Object.values(firmLayers).flatMap(layer => layer.getLayers());
         if (allMarkers.length > 0) {
             const group = L.featureGroup(allMarkers);
             map.fitBounds(group.getBounds(), {
                 padding: [50, 50],
-                maxZoom: 6  // don't zoom past 6 when auto-fitting
+                maxZoom: DEFAULT_ZOOM  // use default zoom as max when auto-fitting
             });
         }
     }
@@ -296,13 +296,18 @@ async function handleRealtimeChange(payload) {
 
 // Fit map bounds to show all visible markers
 function fitMapToMarkers() {
+    if (!AUTO_FIT_ON_LOAD) {
+        console.log('Auto-fit disabled, keeping default view');
+        return;
+    }
+    
     if (Object.keys(firmLayers).length > 0) {
         const allMarkers = Object.values(firmLayers).flatMap(layer => layer.getLayers());
         if (allMarkers.length > 0) {
             const group = L.featureGroup(allMarkers);
             map.fitBounds(group.getBounds(), {
                 padding: [50, 50],
-                maxZoom: 6  // don't zoom past 6 when auto-fitting
+                maxZoom: DEFAULT_ZOOM  // use default zoom as max when auto-fitting
             });
         }
     }
@@ -336,14 +341,21 @@ async function refreshFirmData() {
     }
 }
 
+// Map default constants
+const DEFAULT_CENTER = [39.5, -98.35];  // continental US center
+const DEFAULT_ZOOM = 4;                 // starting zoom
+const MIN_ZOOM = 3;
+const MAX_ZOOM = 12;
+const AUTO_FIT_ON_LOAD = false;         // prevent auto-fit from overriding default view
+
 // Initialize Leaflet map
 function initializeMap() {
     // Create map centered on US with smooth zoom controls
     map = L.map('map', {
-        center: [39.5, -98.35],   // continental US center
-        zoom: 4,                  // starting zoom
-        minZoom: 3,
-        maxZoom: 12,
+        center: DEFAULT_CENTER,
+        zoom: DEFAULT_ZOOM,
+        minZoom: MIN_ZOOM,
+        maxZoom: MAX_ZOOM,
         
         // smoother interactions:
         zoomSnap: 0.5,            // allow half zoom levels
@@ -357,6 +369,11 @@ function initializeMap() {
         zoomControl: true,
         attributionControl: true
     });
+    
+    // Expose map for console debugging
+    if (typeof window !== 'undefined') {
+        window._map = map;
+    }
 
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -450,7 +467,7 @@ function clearAllLayers() {
 
 // Reset map view
 function resetMapView() {
-    map.setView([39.5, -98.35], 4, { maxZoom: 6 }); // Center of US with zoom limit
+    map.setView(DEFAULT_CENTER, DEFAULT_ZOOM, { animate: true });
 }
 
 // Toggle fullscreen
