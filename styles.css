@@ -48,11 +48,17 @@ body {
 
 .logo-container {
     margin-bottom: 2rem;
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .logo {
     height: 28px;
     display: inline-block;
+    object-fit: contain;
+    max-width: 200px;
 }
 
 .logo-xl {
@@ -60,6 +66,14 @@ body {
     margin-bottom: 1rem;
     display: block;
     margin: 0 auto;
+    object-fit: contain;
+    max-width: 300px;
+}
+
+.logo-xl[src*=".svg"] {
+    background: #f7f7f7;
+    border-radius: 8px;
+    padding: 8px;
 }
 
 .password-container h1 {
@@ -149,6 +163,7 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
+    min-height: 28px;
 }
 
 .header-logo {
