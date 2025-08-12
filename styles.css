@@ -54,26 +54,16 @@ body {
     justify-content: center;
 }
 
-.logo {
-    height: 28px;
-    display: inline-block;
-    object-fit: contain;
-    max-width: 200px;
+.logo { 
+    height: 36px; 
+    display: inline-block; 
+    object-fit: contain; 
 }
 
-.logo-xl {
-    height: 64px;
-    margin-bottom: 1rem;
-    display: block;
-    margin: 0 auto;
-    object-fit: contain;
-    max-width: 300px;
-}
-
-.logo-xl[src*=".svg"] {
-    background: #f7f7f7;
-    border-radius: 8px;
-    padding: 8px;
+.logo-xl { 
+    height: 80px; 
+    margin-bottom: 1rem; 
+    object-fit: contain; 
 }
 
 .password-container h1 {
@@ -163,7 +153,14 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
-    min-height: 28px;
+    min-height: 36px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
 }
 
 .header-logo {
