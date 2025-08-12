@@ -100,6 +100,9 @@ async function initializeApp() {
         // Subscribe to realtime changes
         subscribeRealtime();
         
+        // Initialize last updated badge
+        initializeLastUpdatedBadge();
+        
     } catch (error) {
         console.error('Error initializing app:', error);
         showError('Failed to initialize the application. Please try again.');
@@ -302,6 +305,21 @@ function fitMapToMarkers() {
                 maxZoom: 6  // don't zoom past 6 when auto-fitting
             });
         }
+    }
+}
+
+// Initialize last updated badge
+function initializeLastUpdatedBadge() {
+    try {
+        const mapContainer = document.querySelector('.map-container');
+        if (mapContainer && window.LastUpdatedBadge) {
+            window.lastUpdatedBadge = new window.LastUpdatedBadge(mapContainer);
+            console.log('Last updated badge initialized');
+        } else {
+            console.warn('Could not initialize last updated badge - missing container or component');
+        }
+    } catch (error) {
+        console.error('Error initializing last updated badge:', error);
     }
 }
 
